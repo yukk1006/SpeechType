@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  password_hash String
+  created_at    DateTime        @default(now())
+  
+  transactions  Transaction[]
+  assetBaseline AssetBaseline?
+}
+
+model Category {
+  id           String        @id @default(uuid())
+  type         String        // "income" | "expense"
+  name         String
+  color        String?
+  transactions Transaction[]
+}
+
+model Transaction {
+  id                        String   @id @default(uuid())
+  user_id                   String
+  type                      String   // "income" | "expense"
+  asset_type                String   // "cash" | "account"
+  amount                    Int
+  actual_consumption_amount Int
+  category_id               String
+  memo                      String?
+  transaction_date          DateTime
+  created_at                DateTime @default(now())
+
+  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [category_id], references: [id], onDelete: Restrict)
+}
+
+model AssetBaseline {
+  id                   String   @id @default(uuid())
+  user_id              String   @unique
+  base_cash            Int      @default(0)
+  base_account_balance Int      @default(0)
+  base_date            DateTime @default(now())
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
