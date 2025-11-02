@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,8 +27,14 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Server returned non-JSON response');
+        throw new Error('서버와 통신 중 치명적인 에러가 발생했습니다. VS Code 터미널 창을 확인해주세요!');
+      }
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Login failed');
+      if (!res.ok) throw new Error(data.message || '로그인에 실패했습니다.');
 
       router.push('/dashboard');
     } catch (err: any) {
@@ -78,12 +85,12 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <p className="text-sm text-zinc-500">
+          <div className="text-sm text-zinc-500">
             Don't have an account?{' '}
-            <Button variant="link" className="p-0 text-zinc-950 font-medium" onClick={() => router.push('/signup')}>
+            <Link href="/signup" className="text-zinc-950 font-medium hover:underline">
               Sign up
-            </Button>
-          </p>
+            </Link>
+          </div>
         </CardFooter>
       </Card>
     </div>
