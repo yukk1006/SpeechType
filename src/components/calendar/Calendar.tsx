@@ -13,6 +13,7 @@ import {
   isSameMonth,
   isSameDay
 } from 'date-fns';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,28 @@ export default function Calendar() {
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+
+  const queryClient = useQueryClient();
+  const currentMonthStr = format(monthStart, 'yyyy-MM');
+  
+  // 4.3 Fetch transactions for the visible month
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['transactions', currentMonthStr],
+    queryFn: async () => {
+      const res = await fetch(`/api/transactions?month=${currentMonthStr}`);
+      if (!res.ok) throw new Error('Failed to fetch transactions');
+      return res.json();
+    }
+  });
+
+  // Map transactions by their stringified dates ('yyyy-MM-dd')
+  const transactionsByDate = transactions.reduce((acc: Record<string, any[]>, tx: any) => {
+    // tx.transaction_date is an ISO string "YYYY-MM-DDTHH:mm..."
+    const dateStr = format(new Date(tx.transaction_date), 'yyyy-MM-dd');
+    if (!acc[dateStr]) acc[dateStr] = [];
+    acc[dateStr].push(tx);
+    return acc;
+  }, {});
 
   const handleDateClick = (day: Date) => {
     setSelectedDate(day);
@@ -87,6 +110,12 @@ export default function Calendar() {
           const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
           const isToday = isSameDay(day, new Date());
           const isCurrentMonth = isSameMonth(day, monthStart);
+          const dayStr = format(day, 'yyyy-MM-dd');
+          
+          // Check for transactions on this day
+          const dayTransactions = transactionsByDate[dayStr] || [];
+          const hasIncome = dayTransactions.some((t: any) => t.type === 'income');
+          const hasExpense = dayTransactions.some((t: any) => t.type === 'expense');
 
           return (
             <button
@@ -103,11 +132,15 @@ export default function Calendar() {
                 isSelected && "bg-zinc-950 text-white shadow-md font-bold hover:bg-zinc-800"
               )}
             >
-              <span>{format(day, 'd')}</span>
+              <span className="z-10">{format(day, 'd')}</span>
 
-              {/* Optional: Phase 4 transaction dot indicator placeholder. 
-                  In reality, we will render a dot here if the day has history. */}
-              {/* <div className="absolute bottom-1 h-1 w-1 bg-zinc-300 rounded-full"></div> */}
+              {/* Transaction Dot Indicators */}
+              {(hasIncome || hasExpense) && (
+                <div className="absolute bottom-1.5 flex gap-1 items-center justify-center w-full">
+                  {hasExpense && <div className="h-1.5 w-1.5 bg-zinc-400 rounded-full" title="Expense" />}
+                  {hasIncome && <div className="h-1.5 w-1.5 bg-zinc-950 rounded-full" title="Income" />}
+                </div>
+              )}
             </button>
           );
         })}
@@ -118,7 +151,7 @@ export default function Calendar() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         selectedDate={selectedDate}
-        onSuccess={() => console.log('Transaction added (Need React Query refresh in 4.3)')}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['transactions'] })}
       />
     </div>
   );
