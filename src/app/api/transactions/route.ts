@@ -5,12 +5,13 @@ import { z } from 'zod';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
 const transactionSchema = z.object({
-  amount: z.number().min(1, 'Amount must be at least 1 ¥.'),
-  type: z.enum(['INCOME', 'EXPENSE']),
-  isConsumption: z.boolean().default(true),
-  description: z.string().min(1, 'Description is required.'),
-  date: z.string(), // ISO String from frontend
-  categoryId: z.string().optional().nullable(),
+  type: z.enum(['income', 'expense']),
+  asset_type: z.enum(['cash', 'account']),
+  amount: z.number().int().min(1, 'Amount must be at least 1 ¥.'),
+  actual_consumption_amount: z.number().int().min(0),
+  memo: z.string().optional().nullable(),
+  transaction_date: z.string(), // ISO String
+  category_id: z.string().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -25,23 +26,36 @@ export async function POST(req: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json(
-        { message: result.error.errors[0].message },
+        { message: result.error.issues[0].message },
         { status: 400 }
       );
     }
 
-    const { amount, type, isConsumption, description, date, categoryId } = result.data;
+    const { type, asset_type, amount, actual_consumption_amount, memo, transaction_date, category_id } = result.data;
+
+    // 만약 전달받은 카테고리가 없다면, 시스템에 있는 첫 번째 임의 카테고리를 찾아 연결하거나 임시로 만듭니다.
+    // (이후 프론트엔드 모달이 개발되면 유저가 무조건 선택하게 됨)
+    let finalCategoryId = category_id;
+    if (!finalCategoryId) {
+      let fallbackCategory = await prisma.category.findFirst({ where: { type } });
+      if (!fallbackCategory) {
+        fallbackCategory = await prisma.category.create({
+          data: { name: 'Default', type }
+        });
+      }
+      finalCategoryId = fallbackCategory.id;
+    }
 
     const transaction = await prisma.transaction.create({
       data: {
         amount,
+        actual_consumption_amount,
         type,
-        // Income is never "consumption", only expenses can be actual consumption
-        isConsumption: type === 'EXPENSE' ? isConsumption : false,
-        description,
-        date: new Date(date),
-        userId: session.userId,
-        categoryId: categoryId || null,
+        asset_type,
+        memo: memo || null,
+        transaction_date: new Date(transaction_date),
+        user_id: session.userId,
+        category_id: finalCategoryId,
       },
     });
 
@@ -63,25 +77,16 @@ export async function GET(req: NextRequest) {
     const monthStr = searchParams.get('month'); // Expecting format: YYYY-MM
 
     let dateFilter = {};
-    
     if (monthStr) {
-      // Return transactions only inside the bounded month
       const targetDate = new Date(`${monthStr}-01T00:00:00.000Z`);
-      
-      // We will allow slightly outside bounds in the frontend if needed, 
-      // but for the backend payload we fetch strictly the exact month for aggregation.
-      // (Alternately, client can just fetch all or we can broaden the range by a week)
-      // To ensure calendar leading/trailing dates render properly, 
-      // let's expand the fetch by 7 days in both directions.
-      
       const paddedStart = new Date(startOfMonth(targetDate));
       paddedStart.setDate(paddedStart.getDate() - 7);
-      
+
       const paddedEnd = new Date(endOfMonth(targetDate));
       paddedEnd.setDate(paddedEnd.getDate() + 7);
 
       dateFilter = {
-        date: {
+        transaction_date: {
           gte: paddedStart,
           lte: paddedEnd,
         },
@@ -90,12 +95,15 @@ export async function GET(req: NextRequest) {
 
     const transactions = await prisma.transaction.findMany({
       where: {
-        userId: session.userId,
+        user_id: session.userId,
         ...dateFilter,
       },
       orderBy: {
-        date: 'desc',
+        transaction_date: 'desc', // 최신순(내림차순) 정렬
       },
+      include: {
+        category: true, // 연결된 카테고리 이름도 같이 불러오기!
+      }
     });
 
     return NextResponse.json(transactions);
