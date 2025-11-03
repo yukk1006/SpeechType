@@ -36,8 +36,8 @@ const formSchema = z.object({
   type: z.enum(['income', 'expense']),
   asset_type: z.enum(['cash', 'account']),
   amount: z.coerce.number().int().min(1, 'Please enter a valid amount (≥1 ¥)'),
-  actual_consumption_amount: z.coerce.number().int().min(0).default(0),
-  memo: z.string().optional().default(''),
+  actual_consumption_amount: z.coerce.number().int().min(0),
+  memo: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -59,7 +59,7 @@ export default function TransactionModal({
   const [errorMsg, setErrorMsg] = useState('');
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       type: 'expense',
       asset_type: 'cash',
@@ -136,7 +136,7 @@ export default function TransactionModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="border-zinc-300 focus:ring-zinc-950">
                           <SelectValue placeholder="Select type" />
@@ -157,7 +157,7 @@ export default function TransactionModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Asset Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="border-zinc-300 focus:ring-zinc-950">
                           <SelectValue placeholder="Select asset" />
