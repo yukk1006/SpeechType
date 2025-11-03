@@ -16,12 +16,14 @@ import {
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import TransactionModal from './TransactionModal';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
@@ -36,6 +38,12 @@ export default function Calendar() {
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+
+  const handleDateClick = (day: Date) => {
+    setSelectedDate(day);
+    // Open modal directly when clicking a date for smooth UX
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="w-full bg-white border border-zinc-200 rounded-xl shadow-sm p-4 sm:p-6 text-zinc-950">
@@ -76,14 +84,14 @@ export default function Calendar() {
       {/* 3.2.3: Calendar Grid & Date Cells */}
       <div className="grid grid-cols-7 gap-y-1 gap-x-1 sm:gap-y-2 sm:gap-x-2">
         {days.map((day) => {
-          const isSelected = isSameDay(day, selectedDate);
+          const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
           const isToday = isSameDay(day, new Date());
           const isCurrentMonth = isSameMonth(day, monthStart);
 
           return (
             <button
               key={day.toString()}
-              onClick={() => setSelectedDate(day)}
+              onClick={() => handleDateClick(day)}
               className={cn(
                 "h-10 w-full sm:h-12 flex flex-col items-center justify-center rounded-lg text-sm transition-all relative font-medium",
 
@@ -104,6 +112,14 @@ export default function Calendar() {
           );
         })}
       </div>
+
+      {/* Transaction Entry Modal (Step 4.2) */}
+      <TransactionModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        selectedDate={selectedDate}
+        onSuccess={() => console.log('Transaction added (Need React Query refresh in 4.3)')}
+      />
     </div>
   );
 }
