@@ -116,7 +116,7 @@ export default function TransactionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px] bg-white text-zinc-950 border-zinc-200">
+      <DialogContent className="sm:max-w-[425px] bg-white text-zinc-950 border-zinc-200 max-h-[85vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold tracking-tight">
             Add Transaction
