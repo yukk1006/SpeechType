@@ -45,7 +45,7 @@ export default function DailyTransactionList({ date, transactions, onAddClick }:
         <ul className="space-y-3">
           {transactions.map((tx) => (
             <li key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border border-zinc-100 bg-white hover:bg-zinc-50 transition-colors gap-3 group">
-              
+
               <div className="flex items-center gap-3 w-full sm:w-auto overflow-hidden">
                 <div className={`p-2 rounded-full flex-shrink-0 ${tx.type === 'income' ? 'bg-zinc-100 text-zinc-900' : 'bg-red-50 text-red-500'}`}>
                   {tx.type === 'income' ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
@@ -64,13 +64,13 @@ export default function DailyTransactionList({ date, transactions, onAddClick }:
                 <div className={`font-semibold whitespace-nowrap ${tx.type === 'income' ? 'text-zinc-900' : 'text-red-500'}`}>
                   {tx.type === 'income' ? '+' : '-'} ¥ {tx.amount.toLocaleString()}
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="text-zinc-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   onClick={(e) => {
                     e.stopPropagation();
-                    alert('삭제 백엔드 API 기능은 나중에 연결할 예정입니다! 눈에 보이는 UI 요소만 구성되어 있습니다. 🛠️');
+                    alert('we will add this function later');
                   }}
                   title="Delete Transaction"
                 >
