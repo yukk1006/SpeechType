@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
@@ -35,6 +36,7 @@ import {
 const formSchema = z.object({
   type: z.enum(['income', 'expense']),
   asset_type: z.enum(['cash', 'account']),
+  category_id: z.string().min(1, 'Please select a category'),
   amount: z.coerce.number().int().min(1, 'Please enter a valid amount (≥1 ¥)'),
   actual_consumption_amount: z.coerce.number().int().min(0),
   memo: z.string().optional(),
@@ -63,6 +65,7 @@ export default function TransactionModal({
     defaultValues: {
       type: 'expense',
       asset_type: 'cash',
+      category_id: '',
       amount: 0,
       actual_consumption_amount: 0,
       memo: '',
@@ -71,6 +74,23 @@ export default function TransactionModal({
 
   const watchType = form.watch('type');
   const watchAmount = form.watch('amount');
+
+  // Fetch categories
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const res = await fetch('/api/categories');
+      if (!res.ok) throw new Error('Failed to fetch categories');
+      return res.json();
+    }
+  });
+
+  const filteredCategories = categories.filter((c: any) => c.type === watchType);
+
+  // Reset category selection when income/expense type changes
+  useEffect(() => {
+    form.setValue('category_id', '');
+  }, [watchType, form]);
 
   // Automatically sync consumption amount with expense amount as a UI convenience
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,6 +193,31 @@ export default function TransactionModal({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="category_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <FormControl>
+                      <SelectTrigger className="border-zinc-300 focus:ring-zinc-950">
+                        <SelectValue placeholder="Select an area" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {filteredCategories.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
