@@ -200,7 +200,7 @@ export default function TransactionModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || undefined}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="border-zinc-300 focus:ring-zinc-950">
                         <SelectValue placeholder="Select an area" />
