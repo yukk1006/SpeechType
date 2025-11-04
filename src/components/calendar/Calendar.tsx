@@ -18,6 +18,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import TransactionModal from './TransactionModal';
+import DailyTransactionList from './DailyTransactionList';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -64,8 +65,8 @@ export default function Calendar() {
 
   const handleDateClick = (day: Date) => {
     setSelectedDate(day);
-    // Open modal directly when clicking a date for smooth UX
-    setIsModalOpen(true);
+    // Modal will no longer open automatically. 
+    // User must click "+ Add" from the DailyTransactionList.
   };
 
   return (
@@ -145,6 +146,13 @@ export default function Calendar() {
           );
         })}
       </div>
+
+      {/* 4.4 Daily Transaction View (Option A UI) */}
+      <DailyTransactionList 
+        date={selectedDate} 
+        transactions={selectedDate ? (transactionsByDate[format(selectedDate, 'yyyy-MM-dd')] || []) : []} 
+        onAddClick={() => setIsModalOpen(true)}
+      />
 
       {/* Transaction Entry Modal (Step 4.2) */}
       <TransactionModal 
