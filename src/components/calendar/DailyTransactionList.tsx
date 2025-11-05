@@ -1,8 +1,9 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Trash2, TrendingDown, TrendingUp } from 'lucide-react';
+import { Loader2, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Transaction {
   id: string;
@@ -21,6 +22,19 @@ interface DailyTransactionListProps {
 }
 
 export default function DailyTransactionList({ date, transactions, onAddClick }: DailyTransactionListProps) {
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    }
+  });
+
   if (!date) return null;
 
   return (
@@ -64,17 +78,24 @@ export default function DailyTransactionList({ date, transactions, onAddClick }:
                 <div className={`font-semibold whitespace-nowrap ${tx.type === 'income' ? 'text-zinc-900' : 'text-red-500'}`}>
                   {tx.type === 'income' ? '+' : '-'} ¥ {tx.amount.toLocaleString()}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  disabled={deleteMutation.isPending && deleteMutation.variables === tx.id}
                   className="text-zinc-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   onClick={(e) => {
                     e.stopPropagation();
-                    alert('we will add this function later');
+                    if (confirm('Are you sure you want to delete this transaction?')) {
+                      deleteMutation.mutate(tx.id);
+                    }
                   }}
                   title="Delete Transaction"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {deleteMutation.isPending && deleteMutation.variables === tx.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-red-500" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
 
