@@ -203,7 +203,12 @@ export default function TransactionModal({
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="border-zinc-300 focus:ring-zinc-950">
-                        <SelectValue placeholder="Select an area" />
+                        <SelectValue placeholder="Select an area">
+                          {field.value 
+                            ? filteredCategories.find((c: any) => c.id === field.value)?.name || "Select an area" 
+                            : "Select an area"
+                          }
+                        </SelectValue>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
