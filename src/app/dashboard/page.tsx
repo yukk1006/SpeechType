@@ -1,11 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import Calendar from '@/components/calendar/Calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import AssetCard from '@/components/dashboard/AssetCard';
+import BaselineModal from '@/components/dashboard/BaselineModal';
 
 export default function DashboardPage() {
+  const [isBaselineOpen, setIsBaselineOpen] = useState(false);
+
   return (
     <div className="space-y-6">
       <div>
@@ -53,10 +57,13 @@ export default function DashboardPage() {
           </Card>
 
           {/* Asset Card — now connected to real API */}
-          <AssetCard onBaselineClick={() => {}} />
+          <AssetCard onBaselineClick={() => setIsBaselineOpen(true)} />
 
         </div>
       </div>
+
+      {/* Baseline Setting Modal */}
+      <BaselineModal isOpen={isBaselineOpen} onClose={() => setIsBaselineOpen(false)} />
     </div>
   );
 }

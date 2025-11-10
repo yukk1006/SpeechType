@@ -96,7 +96,7 @@ export default function AssetCard({ onBaselineClick }: AssetCardProps) {
         )}
       </CardContent>
 
-      <CardFooter className="flex gap-2 pt-4 border-t border-zinc-800 mt-4">
+      <CardFooter className="grid grid-cols-2 gap-2 pt-4 border-t border-zinc-800 mt-4">
         <Button
           variant="secondary"
           size="sm"
