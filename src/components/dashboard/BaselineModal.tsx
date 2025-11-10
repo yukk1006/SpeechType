@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import * as z from 'zod';
+import { format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 
 import {
@@ -28,6 +29,7 @@ import { Button } from '@/components/ui/button';
 const formSchema = z.object({
   base_cash: z.coerce.number().int().min(0, 'Must be 0 or more'),
   base_account_balance: z.coerce.number().int().min(0, 'Must be 0 or more'),
+  base_date: z.string().min(1, 'Please select a baseline date'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -58,6 +60,7 @@ export default function BaselineModal({ isOpen, onClose }: BaselineModalProps) {
     defaultValues: {
       base_cash: 0,
       base_account_balance: 0,
+      base_date: format(new Date(), 'yyyy-MM-dd'),
     },
   });
 
@@ -67,6 +70,9 @@ export default function BaselineModal({ isOpen, onClose }: BaselineModalProps) {
       form.reset({
         base_cash: existing.base_cash,
         base_account_balance: existing.base_account_balance,
+        base_date: existing.base_date
+          ? format(new Date(existing.base_date), 'yyyy-MM-dd')
+          : format(new Date(), 'yyyy-MM-dd'),
       });
     }
   }, [existing, form]);
@@ -76,7 +82,6 @@ export default function BaselineModal({ isOpen, onClose }: BaselineModalProps) {
     setErrorMsg('');
 
     try {
-      // Always use PATCH (upsert on backend)
       const res = await fetch('/api/assets/baseline', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -88,7 +93,6 @@ export default function BaselineModal({ isOpen, onClose }: BaselineModalProps) {
         throw new Error(err.message || 'Failed to save baseline');
       }
 
-      // Refresh asset card data
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['assets-baseline'] });
       onClose();
@@ -106,20 +110,43 @@ export default function BaselineModal({ isOpen, onClose }: BaselineModalProps) {
           <DialogTitle className="text-xl font-bold tracking-tight">
             Set Baseline Assets
           </DialogTitle>
-          <DialogDescription className="text-zinc-500">
-            Enter your starting cash and account balance. This is the reference point for all calculations.
+          <DialogDescription className="text-zinc-500 text-xs leading-relaxed">
+            Use this when your calculated asset does not match your actual cash or account balance.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
 
+            {/* Baseline Date */}
+            <FormField
+              control={form.control}
+              name="base_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Baseline Date</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      className="border-zinc-300 focus-visible:ring-zinc-950"
+                      {...field}
+                    />
+                  </FormControl>
+                  <p className="text-[11px] text-zinc-500">
+                    Only transactions on or after this date will be included in calculations.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Cash */}
             <FormField
               control={form.control}
               name="base_cash"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Starting Cash (¥)</FormLabel>
+                  <FormLabel>Cash on Baseline Date (¥)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -132,12 +159,13 @@ export default function BaselineModal({ isOpen, onClose }: BaselineModalProps) {
               )}
             />
 
+            {/* Account */}
             <FormField
               control={form.control}
               name="base_account_balance"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Starting Account Balance (¥)</FormLabel>
+                  <FormLabel>Account Balance on Baseline Date (¥)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
