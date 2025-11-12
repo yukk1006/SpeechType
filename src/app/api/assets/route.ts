@@ -9,17 +9,23 @@ export async function GET() {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. 기준 자산 조회
+
     const baseline = await prisma.assetBaseline.findUnique({
       where: { user_id: session.userId },
     });
 
     const baseCash = baseline?.base_cash ?? 0;
     const baseAccount = baseline?.base_account_balance ?? 0;
+    const baseDate = baseline?.base_date ?? null;
 
-    // 2. 전체 거래 내역 조회 (asset_type별로 수입/지출 합산)
+
     const transactions = await prisma.transaction.findMany({
-      where: { user_id: session.userId },
+      where: {
+        user_id: session.userId,
+        ...(baseDate && {
+          transaction_date: { gte: baseDate },
+        }),
+      },
       select: {
         type: true,
         asset_type: true,
@@ -28,7 +34,6 @@ export async function GET() {
       },
     });
 
-    // 3. 계산
     let cashIncome = 0;
     let cashExpense = 0;
     let accountIncome = 0;
@@ -53,18 +58,15 @@ export async function GET() {
     const totalAssets = currentCash + currentAccount;
 
     return NextResponse.json({
-      // 현재 자산
       current_cash: currentCash,
       current_account: currentAccount,
       total_assets: totalAssets,
 
-      // 기준 자산 원본
       base_cash: baseCash,
       base_account_balance: baseAccount,
       base_date: baseline?.base_date ?? null,
       baseline_exists: !!baseline,
 
-      // 통계
       stats: {
         cash_income: cashIncome,
         cash_expense: cashExpense,
