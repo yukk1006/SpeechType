@@ -6,7 +6,7 @@ import { z } from 'zod';
 const baselineSchema = z.object({
   base_cash: z.coerce.number().int().min(0, 'Cash must be 0 or more'),
   base_account_balance: z.coerce.number().int().min(0, 'Account balance must be 0 or more'),
-  base_date: z.string().optional(),
+  base_date: z.string().min(1, 'Baseline date is required'),
 });
 
 // GET — 현재 기준 자산 조회
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
         user_id: session.userId,
         base_cash,
         base_account_balance,
-        base_date: base_date ? new Date(base_date) : new Date(),
+        base_date: new Date(base_date),
       },
     });
 
@@ -91,13 +91,13 @@ export async function PATCH(req: NextRequest) {
       update: {
         base_cash,
         base_account_balance,
-        base_date: base_date ? new Date(base_date) : new Date(),
+        base_date: new Date(base_date),
       },
       create: {
         user_id: session.userId,
         base_cash,
         base_account_balance,
-        base_date: base_date ? new Date(base_date) : new Date(),
+        base_date: new Date(base_date),
       },
     });
 
