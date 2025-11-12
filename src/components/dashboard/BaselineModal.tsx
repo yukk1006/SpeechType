@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -64,8 +64,18 @@ export default function BaselineModal({ isOpen, onClose }: BaselineModalProps) {
     },
   });
 
-  // Prefill form when existing data loads
+  // Prefill when existing data loads; reset to defaults when modal closes
   useEffect(() => {
+    if (!isOpen) {
+      // reset to today's date when closed, so stale values don't persist
+      form.reset({
+        base_cash: 0,
+        base_account_balance: 0,
+        base_date: format(new Date(), 'yyyy-MM-dd'),
+      });
+      setErrorMsg('');
+      return;
+    }
     if (existing?.exists) {
       form.reset({
         base_cash: existing.base_cash,
@@ -75,7 +85,7 @@ export default function BaselineModal({ isOpen, onClose }: BaselineModalProps) {
           : format(new Date(), 'yyyy-MM-dd'),
       });
     }
-  }, [existing, form]);
+  }, [existing, isOpen, form]);
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
@@ -108,12 +118,25 @@ export default function BaselineModal({ isOpen, onClose }: BaselineModalProps) {
       <DialogContent className="sm:max-w-[380px] bg-white text-zinc-950 border-zinc-200">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold tracking-tight">
-            Set Baseline Assets
+            {existing?.exists ? 'Update Baseline' : 'Set Baseline Assets'}
           </DialogTitle>
           <DialogDescription className="text-zinc-500 text-xs leading-relaxed">
             Use this when your calculated asset does not match your actual cash or account balance.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Show current baseline info if exists */}
+        {existing?.exists && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-50 border border-zinc-200 text-xs text-zinc-500">
+            <CalendarIcon className="h-3.5 w-3.5 flex-shrink-0" />
+            <span>
+              Current baseline: <span className="font-semibold text-zinc-700">
+                {format(new Date(existing.base_date), 'MMM d, yyyy')}
+              </span>
+              {' '}&mdash; Cash ¥{existing.base_cash.toLocaleString()}, Account ¥{existing.base_account_balance.toLocaleString()}
+            </span>
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
