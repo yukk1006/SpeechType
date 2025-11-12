@@ -42,10 +42,10 @@ export default function AssetCard({ onBaselineClick }: AssetCardProps) {
     <Card className="shadow-sm border-zinc-200 bg-zinc-950 text-white">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg text-zinc-50">Current Assets</CardTitle>
-        <CardDescription className="text-zinc-400">
+        <CardDescription className="text-zinc-400 text-xs">
           {data?.base_date
-            ? `Baseline set on ${new Date(data.base_date).toLocaleDateString()}`
-            : 'No baseline set'}
+            ? `Since ${new Date(data.base_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`
+            : 'No baseline set — showing all transactions'}
         </CardDescription>
       </CardHeader>
 
@@ -75,6 +75,11 @@ export default function AssetCard({ onBaselineClick }: AssetCardProps) {
 
             {/* Income / Expense stats */}
             <div className="pt-3 border-t border-zinc-800 space-y-1.5 text-xs text-zinc-400">
+              {data?.base_date && (
+                <p className="text-zinc-500 text-[11px] pb-1">
+                  Transactions from {new Date(data.base_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} onward
+                </p>
+              )}
               <div className="flex justify-between items-center">
                 <span className="flex items-center gap-1">
                   <TrendingUp className="h-3 w-3" /> Total Income
