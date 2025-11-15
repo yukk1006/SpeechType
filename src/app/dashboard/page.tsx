@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { format } from 'date-fns';
 import Calendar from '@/components/calendar/Calendar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingDown, TrendingUp } from 'lucide-react';
 import AssetCard from '@/components/dashboard/AssetCard';
 import BaselineModal from '@/components/dashboard/BaselineModal';
+import MonthlySummaryCard from '@/components/dashboard/MonthlySummaryCard';
 
 export default function DashboardPage() {
   const [isBaselineOpen, setIsBaselineOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'yyyy-MM'));
 
   return (
     <div className="space-y-6">
@@ -26,35 +27,8 @@ export default function DashboardPage() {
         {/* Right Side: Assets & Summary */}
         <div className="space-y-6">
           
-          {/* Monthly Summary Scaffold */}
-          <Card className="shadow-sm border-zinc-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Monthly Summary</CardTitle>
-              <CardDescription>Overview (Phase 6)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
-                    <TrendingUp className="h-4 w-4" /> Income
-                  </div>
-                  <span className="font-semibold text-zinc-900">¥ 0</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm font-medium text-rose-500">
-                    <TrendingDown className="h-4 w-4" /> Outflow
-                  </div>
-                  <span className="font-semibold text-zinc-900">¥ 0</span>
-                </div>
-                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
-                  <div className="text-sm font-medium text-zinc-500">
-                    Actual Consumption
-                  </div>
-                  <span className="font-semibold text-zinc-900">¥ 0</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Monthly Summary Card — Phase 6 */}
+          <MonthlySummaryCard month={currentMonth} />
 
           {/* Asset Card — now connected to real API */}
           <AssetCard onBaselineClick={() => setIsBaselineOpen(true)} />
