@@ -1,7 +1,11 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
-const secretKey = process.env.JWT_SECRET || 'super-secret-key-for-finance-web';
+const secretKey = process.env.JWT_SECRET;
+
+if (!secretKey) {
+  throw new Error('JWT_SECRET is not set');
+}
 const key = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload: any) {
