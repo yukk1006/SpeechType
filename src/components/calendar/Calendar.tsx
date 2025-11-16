@@ -22,7 +22,11 @@ import DailyTransactionList from './DailyTransactionList';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function Calendar() {
+interface CalendarProps {
+  onMonthChange?: (month: string) => void;
+}
+
+export default function Calendar({ onMonthChange }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,8 +42,16 @@ export default function Calendar() {
     end: endDate
   });
 
-  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const nextMonth = () => {
+    const next = addMonths(currentDate, 1);
+    setCurrentDate(next);
+    onMonthChange?.(format(startOfMonth(next), 'yyyy-MM'));
+  };
+  const prevMonth = () => {
+    const prev = subMonths(currentDate, 1);
+    setCurrentDate(prev);
+    onMonthChange?.(format(startOfMonth(prev), 'yyyy-MM'));
+  };
 
   const queryClient = useQueryClient();
   const currentMonthStr = format(monthStart, 'yyyy-MM');

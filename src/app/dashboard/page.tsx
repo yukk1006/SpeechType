@@ -21,7 +21,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Side: Calendar (Takes up 2/3 space on large screens) */}
         <div className="lg:col-span-2">
-          <Calendar />
+          <Calendar onMonthChange={setCurrentMonth} />
         </div>
         
         {/* Right Side: Assets & Summary */}
