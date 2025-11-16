@@ -140,12 +140,6 @@ export default function MonthlySummaryCard({ month }: MonthlySummaryCardProps) {
           </div>
         )}
       </CardContent>
-
-      <StatsModal
-        isOpen={isStatsModalOpen}
-        onClose={() => setIsStatsModalOpen(false)}
-        month={month}
-      />
     </Card>
   );
 }
