@@ -1,8 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { TrendingDown, TrendingUp, Minus, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TrendingDown, TrendingUp, Minus, Loader2, ArrowUp, ArrowDown, PieChart as PieChartIcon } from 'lucide-react';
+import StatsModal from './StatsModal';
 
 interface SummaryData {
   month: string;
@@ -47,6 +50,8 @@ function DiffBadge({ diff, inverse = false }: { diff: number | null; inverse?: b
 }
 
 export default function MonthlySummaryCard({ month }: MonthlySummaryCardProps) {
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+
   const { data, isLoading } = useQuery<SummaryData>({
     queryKey: ['summary', month],
     queryFn: async () => {
@@ -65,9 +70,21 @@ export default function MonthlySummaryCard({ month }: MonthlySummaryCardProps) {
 
   return (
     <Card className="shadow-sm border-zinc-200">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Monthly Summary</CardTitle>
-        <CardDescription className="text-zinc-400 text-xs">{monthLabel}</CardDescription>
+      <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0">
+        <div>
+          <CardTitle className="text-lg">Monthly Summary</CardTitle>
+          <CardDescription className="text-zinc-400 text-xs">{monthLabel}</CardDescription>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs font-medium text-zinc-600 border-zinc-200"
+          onClick={() => setIsStatsModalOpen(true)}
+          disabled={isLoading}
+        >
+          <PieChartIcon className="h-3.5 w-3.5" />
+          View Graphs
+        </Button>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -123,6 +140,12 @@ export default function MonthlySummaryCard({ month }: MonthlySummaryCardProps) {
           </div>
         )}
       </CardContent>
+
+      <StatsModal
+        isOpen={isStatsModalOpen}
+        onClose={() => setIsStatsModalOpen(false)}
+        month={month}
+      />
     </Card>
   );
 }
