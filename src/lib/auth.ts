@@ -32,7 +32,7 @@ export async function createSession(userId: string) {
     expires,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'strict',
     path: '/',
   });
 }
