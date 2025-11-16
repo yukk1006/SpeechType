@@ -136,7 +136,7 @@ export default function StatsModal({ isOpen, onClose, month }: StatsModalProps) 
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => [`¥ ${value.toLocaleString()}`, 'Amount']}
+                    formatter={(value: any) => [`¥ ${Number(value).toLocaleString()}`, 'Amount']}
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   />
                   <Legend verticalAlign="bottom" height={36} iconType="circle" />
