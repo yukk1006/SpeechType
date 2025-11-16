@@ -9,8 +9,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
-  
-  // Extra layer of protection in case middleware is bypassed
+
   if (!session?.userId) {
     redirect('/login');
   }
