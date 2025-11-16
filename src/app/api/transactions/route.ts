@@ -33,8 +33,7 @@ export async function POST(req: NextRequest) {
 
     const { type, asset_type, amount, actual_consumption_amount, memo, transaction_date, category_id } = result.data;
 
-    // 만약 전달받은 카테고리가 없다면, 시스템에 있는 첫 번째 임의 카테고리를 찾아 연결하거나 임시로 만듭니다.
-    // (이후 프론트엔드 모달이 개발되면 유저가 무조건 선택하게 됨)
+    // Fall back to first matching category if none provided; create one if none exists
     let finalCategoryId = category_id;
     if (!finalCategoryId) {
       let fallbackCategory = await prisma.category.findFirst({ where: { type } });
@@ -99,10 +98,10 @@ export async function GET(req: NextRequest) {
         ...dateFilter,
       },
       orderBy: {
-        transaction_date: 'desc', // 최신순(내림차순) 정렬
+        transaction_date: 'desc',
       },
       include: {
-        category: true, // 연결된 카테고리 이름도 같이 불러오기!
+        category: true,
       }
     });
 

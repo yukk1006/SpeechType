@@ -9,7 +9,7 @@ const baselineSchema = z.object({
   base_date: z.string().min(1, 'Baseline date is required'),
 });
 
-// GET — 현재 기준 자산 조회
+// GET — retrieve current baseline
 export async function GET() {
   try {
     const session = await getSession();
@@ -21,7 +21,7 @@ export async function GET() {
       where: { user_id: session.userId },
     });
 
-    // 기준 자산이 없으면 기본값(0) 반환
+    // Return zero defaults if no baseline exists
     if (!baseline) {
       return NextResponse.json({
         base_cash: 0,
@@ -38,7 +38,7 @@ export async function GET() {
   }
 }
 
-// POST — 최초 기준 자산 등록
+// POST — create initial baseline
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PATCH — 기준 자산 재설정
+// PATCH — upsert baseline (create or update)
 export async function PATCH(req: NextRequest) {
   try {
     const session = await getSession();

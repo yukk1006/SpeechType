@@ -6,7 +6,7 @@ export async function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get('session')?.value;
   let isValidSession = false;
 
-  // 단순히 쿠키 문자가 있는지만 보지 않고, 실제로 유효한 '동작하는' 쿠키인지 암호 해독기로 검사합니다.
+  // Validate the session token by decrypting it, not just checking its existence
   if (sessionToken) {
     try {
       await decrypt(sessionToken);
@@ -18,23 +18,23 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // 1. 대시보드 접근 보호
+  // 1. Protect dashboard routes
   if (path.startsWith('/dashboard')) {
     if (!isValidSession) {
       const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete('session'); // 썩은 쿠키면 강제 삭제
+      response.cookies.delete('session'); // Delete invalid/expired session cookie
       return response;
     }
   }
 
-  // 2. 이미 로그인된 상태에서 로그인/가입창 접근 방지
+  // 2. Redirect already-authenticated users away from login/signup
   if (path === '/login' || path === '/signup') {
     if (isValidSession) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }
 
-  // 3. 메인 도메인('/') 라우팅
+  // 3. Root path routing
   if (path === '/') {
     if (isValidSession) {
       return NextResponse.redirect(new URL('/dashboard', request.url));

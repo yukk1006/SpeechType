@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 
     const prevDate = subMonths(targetDate, 1);
 
-    // 이번달 + 지난달 병렬 조회
+    // Fetch current and previous month in parallel
     const [current, prev] = await Promise.all([
       getMonthSummary(session.userId, targetDate),
       getMonthSummary(session.userId, prevDate),
@@ -74,16 +74,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       month: monthStr ?? targetDate.toISOString().slice(0, 7),
 
-      // 이번달
+      // Current month data
       ...current,
 
-      // 지난달
+      // Previous month data
       prev_total_income: prev.has_data ? prev.total_income : null,
       prev_total_expense: prev.has_data ? prev.total_expense : null,
       prev_total_actual_consumption: prev.has_data ? prev.total_actual_consumption : null,
       has_prev_data: prev.has_data,
 
-      // 비교 diff (null = 비교 불가)
+      // Comparison diffs (null = no previous data to compare)
       diff_income,
       diff_expense,
       diff_actual_consumption,

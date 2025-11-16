@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { TrendingDown, TrendingUp, Minus, Loader2 } from 'lucide-react';
+import { TrendingDown, TrendingUp, Minus, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface SummaryData {
   month: string;
@@ -11,10 +11,39 @@ interface SummaryData {
   total_actual_consumption: number;
   net_balance: number;
   transaction_count: number;
+  has_data: boolean;
+  has_prev_data: boolean;
+  prev_total_expense: number | null;
+  prev_total_actual_consumption: number | null;
+  diff_income: number | null;
+  diff_expense: number | null;
+  diff_actual_consumption: number | null;
 }
 
 interface MonthlySummaryCardProps {
   month: string;
+}
+
+// Diff badge showing comparison against previous month
+function DiffBadge({ diff, inverse = false }: { diff: number | null; inverse?: boolean }) {
+  if (diff === null) {
+    return <span className="text-[11px] text-zinc-400">— no prev data</span>;
+  }
+  if (diff === 0) {
+    return <span className="text-[11px] text-zinc-400">= same as last month</span>;
+  }
+
+  const isBad = inverse ? diff > 0 : diff < 0;
+  const color = isBad ? 'text-rose-500' : 'text-emerald-600';
+  const Icon = diff > 0 ? ArrowUp : ArrowDown;
+  const sign = diff > 0 ? '+' : '';
+
+  return (
+    <span className={`flex items-center gap-0.5 text-[11px] font-medium ${color}`}>
+      <Icon className="h-3 w-3" />
+      {sign}¥{Math.abs(diff).toLocaleString()} vs last month
+    </span>
+  );
 }
 
 export default function MonthlySummaryCard({ month }: MonthlySummaryCardProps) {
@@ -48,27 +77,40 @@ export default function MonthlySummaryCard({ month }: MonthlySummaryCardProps) {
         ) : (
           <div className="space-y-3">
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
-                <TrendingUp className="h-4 w-4" /> Income
+            {/* Income */}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
+                  <TrendingUp className="h-4 w-4" /> Income
+                </div>
+                <DiffBadge diff={data?.diff_income ?? null} inverse={false} />
               </div>
               <span className="font-semibold text-zinc-900">{fmt(data?.total_income ?? 0)}</span>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm font-medium text-rose-500">
-                <TrendingDown className="h-4 w-4" /> Expense
+            {/* Expense */}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-medium text-rose-500">
+                  <TrendingDown className="h-4 w-4" /> Expense
+                </div>
+                <DiffBadge diff={data?.diff_expense ?? null} inverse={true} />
               </div>
               <span className="font-semibold text-zinc-900">{fmt(data?.total_expense ?? 0)}</span>
             </div>
 
             <div className="border-t border-zinc-100" />
 
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-zinc-500">Actual Consumption</div>
+            {/* Actual Consumption */}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-sm font-medium text-zinc-500">Actual Consumption</div>
+                <DiffBadge diff={data?.diff_actual_consumption ?? null} inverse={true} />
+              </div>
               <span className="font-semibold text-zinc-900">{fmt(data?.total_actual_consumption ?? 0)}</span>
             </div>
 
+            {/* Net Balance */}
             <div className="flex items-center justify-between pt-1 border-t border-zinc-100">
               <div className="flex items-center gap-2 text-sm font-medium text-zinc-700">
                 <Minus className="h-4 w-4" /> Net Balance
